@@ -1,0 +1,101 @@
+import { useState } from 'react';
+import ContributionForm from './components/ContributionForm';
+import GoalCard from './components/GoalCard';
+import GoalForm from './components/GoalForm';
+import { mockGoals } from './data/mockGoals';
+import type { ContributionFormValues, Goal, GoalFormValues } from './types';
+import {
+  createContribution,
+  createGoal,
+  formatMoney,
+  getGoalStats,
+  getSaved,
+} from './utils/goals';
+
+export default function App() {
+  const [goals, setGoals] = useState<Goal[]>(mockGoals);
+  const [showGoalForm, setShowGoalForm] = useState(false);
+  const [contributionGoalId, setContributionGoalId] = useState<string | null>(null);
+
+  const contributionGoal = goals.find((g) => g.id === contributionGoalId);
+
+  function handleAddGoal(values: GoalFormValues) {
+    setGoals((current) => [createGoal(values), ...current]);
+    setShowGoalForm(false);
+  }
+
+  function handleAddContribution(values: ContributionFormValues) {
+    setGoals((current) =>
+      current.map((g) =>
+        g.id === contributionGoalId
+          ? { ...g, contributions: [...g.contributions, createContribution(values)] }
+          : g,
+      ),
+    );
+    setContributionGoalId(null);
+  }
+
+  const stats = goals.map((g) => getGoalStats(g));
+  const totalSaved = stats.reduce((sum, s) => sum + s.saved, 0);
+  const totalTarget = stats.reduce((sum, s) => sum + s.target, 0);
+  const completed = stats.filter((s) => s.status === 'completed').length;
+
+  return (
+    <main className="page">
+      <header className="top">
+        <div className="top__row">
+          <h1 className="top__title">Savings goals</h1>
+          <button
+            type="button"
+            className="btn btn--primary"
+            onClick={() => setShowGoalForm(true)}
+          >
+            New goal
+          </button>
+        </div>
+        <dl className="summary">
+          <div>
+            <dt>Saved so far</dt>
+            <dd>{formatMoney(totalSaved)}</dd>
+          </div>
+          <div>
+            <dt>Across all goals</dt>
+            <dd>{formatMoney(totalTarget)}</dd>
+          </div>
+          <div>
+            <dt>Goals reached</dt>
+            <dd>
+              {completed} of {goals.length}
+            </dd>
+          </div>
+        </dl>
+      </header>
+
+      <section className="grid" aria-label="Your goals">
+        {goals.map((goal) => (
+          <GoalCard
+            key={goal.id}
+            goal={goal}
+            onAddMoney={(g) => setContributionGoalId(g.id)}
+          />
+        ))}
+      </section>
+
+      {showGoalForm && (
+        <GoalForm
+          onSubmit={handleAddGoal}
+          onCancel={() => setShowGoalForm(false)}
+        />
+      )}
+
+      {contributionGoal && (
+        <ContributionForm
+          goalName={contributionGoal.name}
+          saved={getSaved(contributionGoal)}
+          onSubmit={handleAddContribution}
+          onCancel={() => setContributionGoalId(null)}
+        />
+      )}
+    </main>
+  );
+}
