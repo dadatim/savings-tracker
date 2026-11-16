@@ -3,6 +3,7 @@ import ContributionForm from './components/ContributionForm';
 import GoalCard from './components/GoalCard';
 import GoalForm from './components/GoalForm';
 import { mockGoals } from './data/mockGoals';
+import { useLocalStorage } from './hooks/useLocalStorage';
 import type { ContributionFormValues, Goal, GoalFormValues } from './types';
 import {
   createContribution,
@@ -10,10 +11,18 @@ import {
   formatMoney,
   getGoalStats,
   getSaved,
+  isGoalArray,
 } from './utils/goals';
 
+// Bump the version suffix if the shape of a Goal ever changes.
+const STORAGE_KEY = 'savings-goal-tracker:goals:v1';
+
 export default function App() {
-  const [goals, setGoals] = useState<Goal[]>(mockGoals);
+  const [goals, setGoals] = useLocalStorage<Goal[]>(
+    STORAGE_KEY,
+    mockGoals,
+    isGoalArray,
+  );
   const [showGoalForm, setShowGoalForm] = useState(false);
   const [contributionGoalId, setContributionGoalId] = useState<string | null>(null);
 

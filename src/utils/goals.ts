@@ -107,3 +107,35 @@ export function createContribution(values: ContributionFormValues): Contribution
     note: values.note,
   };
 }
+
+// ---- Runtime checks for data read back from localStorage ----
+
+const isObject = (v: unknown): v is Record<string, unknown> =>
+  typeof v === 'object' && v !== null;
+
+function isContribution(v: unknown): v is Contribution {
+  return (
+    isObject(v) &&
+    typeof v.id === 'string' &&
+    typeof v.amount === 'number' &&
+    typeof v.date === 'string' &&
+    typeof v.note === 'string'
+  );
+}
+
+export function isGoalArray(v: unknown): v is Goal[] {
+  return (
+    Array.isArray(v) &&
+    v.every(
+      (g) =>
+        isObject(g) &&
+        typeof g.id === 'string' &&
+        typeof g.name === 'string' &&
+        typeof g.targetAmount === 'number' &&
+        typeof g.createdAt === 'string' &&
+        (g.deadline === null || typeof g.deadline === 'string') &&
+        Array.isArray(g.contributions) &&
+        g.contributions.every(isContribution),
+    )
+  );
+}
