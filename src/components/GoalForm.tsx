@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import Modal from './Modal';
-import type { GoalFormValues } from '../types';
+import type { Goal, GoalFormValues } from '../types';
 import { todayISO } from '../utils/goals';
 
 interface GoalFormProps {
+  goal?: Goal; // pass a goal to edit it; leave out to create a new one
   onSubmit: (values: GoalFormValues) => void;
   onCancel: () => void;
 }
@@ -16,18 +17,25 @@ interface FormErrors {
   deadline?: string;
 }
 
-export default function GoalForm({ onSubmit, onCancel }: GoalFormProps) {
-  const [name, setName] = useState('');
-  const [target, setTarget] = useState('');
+export default function GoalForm({ goal, onSubmit, onCancel }: GoalFormProps) {
+  const isEdit = goal !== undefined;
+  const today = todayISO();
+
+  const [name, setName] = useState(goal?.name ?? '');
+  const [target, setTarget] = useState(goal ? String(goal.targetAmount) : '');
   const [starting, setStarting] = useState('');
-  const [deadline, setDeadline] = useState('');
+  const [deadline, setDeadline] = useState(goal?.deadline ?? '');
   const [errors, setErrors] = useState<FormErrors>({});
+
+  // If an edited goal's deadline has already passed, let the date picker show it
+  const minDate = goal?.deadline && goal.deadline < today ? goal.deadline : today;
 
   function validate(): { errors: FormErrors; values: GoalFormValues | null } {
     const next: FormErrors = {};
     const trimmed = name.trim();
     const targetAmount = Number(target);
-    const startingAmount = starting === '' ? 0 : Number(starting);
+    // The "already saved" field only exists when creating a goal
+    const startingAmount = isEdit || starting === '' ? 0 : Number(starting);
 
     if (!trimmed) next.name = 'Give your goal a name.';
 
@@ -41,7 +49,8 @@ export default function GoalForm({ onSubmit, onCancel }: GoalFormProps) {
       next.starting = 'This can’t be more than your target.';
     }
 
-    if (deadline && deadline < todayISO()) {
+    // Only complain about a past date if the person actually changed it
+    if (deadline && deadline < today && deadline !== goal?.deadline) {
       next.deadline = 'Pick today or a future date.';
     }
 
@@ -69,7 +78,7 @@ export default function GoalForm({ onSubmit, onCancel }: GoalFormProps) {
     <Modal labelledBy="goal-form-title" onClose={onCancel}>
       <form className="form" onSubmit={handleSubmit} noValidate>
         <h2 id="goal-form-title" className="form__title">
-          New goal
+          {isEdit ? 'Edit goal' : 'New goal'}
         </h2>
 
         <div className="field">
@@ -111,32 +120,34 @@ export default function GoalForm({ onSubmit, onCancel }: GoalFormProps) {
           )}
         </div>
 
-        <div className="field">
-          <label htmlFor="goal-starting">Already saved (optional)</label>
-          <input
-            id="goal-starting"
-            type="number"
-            inputMode="numeric"
-            min="0"
-            step="1"
-            value={starting}
-            onChange={(e) => setStarting(e.target.value)}
-            aria-invalid={!!errors.starting}
-            aria-describedby={errors.starting ? 'goal-starting-error' : undefined}
-          />
-          {errors.starting && (
-            <p id="goal-starting-error" className="field__error">
-              {errors.starting}
-            </p>
-          )}
-        </div>
+        {!isEdit && (
+          <div className="field">
+            <label htmlFor="goal-starting">Already saved (optional)</label>
+            <input
+              id="goal-starting"
+              type="number"
+              inputMode="numeric"
+              min="0"
+              step="1"
+              value={starting}
+              onChange={(e) => setStarting(e.target.value)}
+              aria-invalid={!!errors.starting}
+              aria-describedby={errors.starting ? 'goal-starting-error' : undefined}
+            />
+            {errors.starting && (
+              <p id="goal-starting-error" className="field__error">
+                {errors.starting}
+              </p>
+            )}
+          </div>
+        )}
 
         <div className="field">
           <label htmlFor="goal-deadline">Deadline (optional)</label>
           <input
             id="goal-deadline"
             type="date"
-            min={todayISO()}
+            min={minDate}
             value={deadline}
             onChange={(e) => setDeadline(e.target.value)}
             aria-invalid={!!errors.deadline}
@@ -154,7 +165,7 @@ export default function GoalForm({ onSubmit, onCancel }: GoalFormProps) {
             Cancel
           </button>
           <button type="submit" className="btn btn--primary">
-            Save goal
+            {isEdit ? 'Save changes' : 'Save goal'}
           </button>
         </div>
       </form>

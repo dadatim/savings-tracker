@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import ConfirmDialog from './components/ConfirmDialog';
 import ContributionForm from './components/ContributionForm';
 import GoalCard from './components/GoalCard';
 import GoalForm from './components/GoalForm';
@@ -25,12 +26,38 @@ export default function App() {
   );
   const [showGoalForm, setShowGoalForm] = useState(false);
   const [contributionGoalId, setContributionGoalId] = useState<string | null>(null);
+  const [editingGoalId, setEditingGoalId] = useState<string | null>(null);
+  const [deletingGoalId, setDeletingGoalId] = useState<string | null>(null);
 
   const contributionGoal = goals.find((g) => g.id === contributionGoalId);
+  const editingGoal = goals.find((g) => g.id === editingGoalId);
+  const deletingGoal = goals.find((g) => g.id === deletingGoalId);
 
   function handleAddGoal(values: GoalFormValues) {
     setGoals((current) => [createGoal(values), ...current]);
     setShowGoalForm(false);
+  }
+
+  // Editing changes the goal's details only; its contributions stay as they are
+  function handleEditGoal(values: GoalFormValues) {
+    setGoals((current) =>
+      current.map((g) =>
+        g.id === editingGoalId
+          ? {
+              ...g,
+              name: values.name,
+              targetAmount: values.targetAmount,
+              deadline: values.deadline,
+            }
+          : g,
+      ),
+    );
+    setEditingGoalId(null);
+  }
+
+  function handleDeleteGoal() {
+    setGoals((current) => current.filter((g) => g.id !== deletingGoalId));
+    setDeletingGoalId(null);
   }
 
   function handleAddContribution(values: ContributionFormValues) {
@@ -48,6 +75,15 @@ export default function App() {
   const totalSaved = stats.reduce((sum, s) => sum + s.saved, 0);
   const totalTarget = stats.reduce((sum, s) => sum + s.target, 0);
   const completed = stats.filter((s) => s.status === 'completed').length;
+
+  const deleteCount = deletingGoal?.contributions.length ?? 0;
+  const deleteMessage = deletingGoal
+    ? deleteCount > 0
+      ? `“${deletingGoal.name}” and its ${deleteCount} ${
+          deleteCount === 1 ? 'contribution' : 'contributions'
+        } will be removed permanently. This can’t be undone.`
+      : `“${deletingGoal.name}” will be removed permanently. This can’t be undone.`
+    : '';
 
   return (
     <main className="page">
@@ -80,20 +116,36 @@ export default function App() {
         </dl>
       </header>
 
-      <section className="grid" aria-label="Your goals">
-        {goals.map((goal) => (
-          <GoalCard
-            key={goal.id}
-            goal={goal}
-            onAddMoney={(g) => setContributionGoalId(g.id)}
-          />
-        ))}
-      </section>
+      {goals.length === 0 ? (
+        <p className="empty">
+          No goals yet. Create your first one to start tracking.
+        </p>
+      ) : (
+        <section className="grid" aria-label="Your goals">
+          {goals.map((goal) => (
+            <GoalCard
+              key={goal.id}
+              goal={goal}
+              onAddMoney={(g) => setContributionGoalId(g.id)}
+              onEdit={(g) => setEditingGoalId(g.id)}
+              onDelete={(g) => setDeletingGoalId(g.id)}
+            />
+          ))}
+        </section>
+      )}
 
       {showGoalForm && (
         <GoalForm
           onSubmit={handleAddGoal}
           onCancel={() => setShowGoalForm(false)}
+        />
+      )}
+
+      {editingGoal && (
+        <GoalForm
+          goal={editingGoal}
+          onSubmit={handleEditGoal}
+          onCancel={() => setEditingGoalId(null)}
         />
       )}
 
@@ -103,6 +155,16 @@ export default function App() {
           saved={getSaved(contributionGoal)}
           onSubmit={handleAddContribution}
           onCancel={() => setContributionGoalId(null)}
+        />
+      )}
+
+      {deletingGoal && (
+        <ConfirmDialog
+          title="Delete this goal?"
+          message={deleteMessage}
+          confirmLabel="Delete goal"
+          onConfirm={handleDeleteGoal}
+          onCancel={() => setDeletingGoalId(null)}
         />
       )}
     </main>

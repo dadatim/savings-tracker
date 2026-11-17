@@ -205,3 +205,22 @@ fieldset.field legend { padding: 0; margin-bottom: 6px; font-weight: 600; font-s
 .segmented label:last-child span { border-radius: 0 8px 8px 0; border-left: 0; }
 .segmented input:checked + span { background: var(--blue); border-color: var(--blue); color: #fff; }
 .segmented input:focus-visible + span { outline: 3px solid var(--blue); outline-offset: 2px; }
+
+/* Card action row */
+.card__actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* Destructive actions */
+.btn--danger { background: var(--red); color: #fff; }
+.btn--danger:hover { background: #a02e22; }
+.btn--danger-text { color: var(--red); }
+.btn--danger-text:hover { background: #f6dedb; }
+
+/* Confirm dialog text and empty state */
+.form__text { margin: 0; color: var(--muted); }
+.empty {
+  padding: 48px 20px;
+  text-align: center;
+  color: var(--muted);
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+}

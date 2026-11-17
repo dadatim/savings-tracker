@@ -10,9 +10,16 @@ import {
 interface GoalCardProps {
   goal: Goal;
   onAddMoney: (goal: Goal) => void;
+  onEdit: (goal: Goal) => void;
+  onDelete: (goal: Goal) => void;
 }
 
-export default function GoalCard({ goal, onAddMoney }: GoalCardProps) {
+export default function GoalCard({
+  goal,
+  onAddMoney,
+  onEdit,
+  onDelete,
+}: GoalCardProps) {
   const { saved, target, remaining, progress, status, perMonth } =
     getGoalStats(goal);
 
@@ -44,14 +51,32 @@ export default function GoalCard({ goal, onAddMoney }: GoalCardProps) {
         {goal.deadline && <span>By {formatDate(goal.deadline)}</span>}
       </footer>
 
-      <button
-        type="button"
-        className="btn btn--ghost btn--small"
-        aria-label={`Add money to ${goal.name}`}
-        onClick={() => onAddMoney(goal)}
-      >
-        Add money
-      </button>
+      <div className="card__actions">
+        <button
+          type="button"
+          className="btn btn--ghost btn--small"
+          aria-label={`Add money to ${goal.name}`}
+          onClick={() => onAddMoney(goal)}
+        >
+          Add money
+        </button>
+        <button
+          type="button"
+          className="btn btn--ghost btn--small"
+          aria-label={`Edit ${goal.name}`}
+          onClick={() => onEdit(goal)}
+        >
+          Edit
+        </button>
+        <button
+          type="button"
+          className="btn btn--ghost btn--small btn--danger-text"
+          aria-label={`Delete ${goal.name}`}
+          onClick={() => onDelete(goal)}
+        >
+          Delete
+        </button>
+      </div>
     </article>
   );
 }
