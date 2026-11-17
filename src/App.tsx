@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import ConfirmDialog from './components/ConfirmDialog';
 import ContributionForm from './components/ContributionForm';
+import ContributionHistory from './components/ContributionHistory';
 import GoalCard from './components/GoalCard';
 import GoalForm from './components/GoalForm';
 import { mockGoals } from './data/mockGoals';
@@ -28,10 +29,12 @@ export default function App() {
   const [contributionGoalId, setContributionGoalId] = useState<string | null>(null);
   const [editingGoalId, setEditingGoalId] = useState<string | null>(null);
   const [deletingGoalId, setDeletingGoalId] = useState<string | null>(null);
+  const [historyGoalId, setHistoryGoalId] = useState<string | null>(null);
 
   const contributionGoal = goals.find((g) => g.id === contributionGoalId);
   const editingGoal = goals.find((g) => g.id === editingGoalId);
   const deletingGoal = goals.find((g) => g.id === deletingGoalId);
+  const historyGoal = goals.find((g) => g.id === historyGoalId);
 
   function handleAddGoal(values: GoalFormValues) {
     setGoals((current) => [createGoal(values), ...current]);
@@ -69,6 +72,19 @@ export default function App() {
       ),
     );
     setContributionGoalId(null);
+  }
+
+  function handleDeleteContribution(contributionId: string) {
+    setGoals((current) =>
+      current.map((g) =>
+        g.id === historyGoalId
+          ? {
+              ...g,
+              contributions: g.contributions.filter((c) => c.id !== contributionId),
+            }
+          : g,
+      ),
+    );
   }
 
   const stats = goals.map((g) => getGoalStats(g));
@@ -127,6 +143,7 @@ export default function App() {
               key={goal.id}
               goal={goal}
               onAddMoney={(g) => setContributionGoalId(g.id)}
+              onHistory={(g) => setHistoryGoalId(g.id)}
               onEdit={(g) => setEditingGoalId(g.id)}
               onDelete={(g) => setDeletingGoalId(g.id)}
             />
@@ -155,6 +172,14 @@ export default function App() {
           saved={getSaved(contributionGoal)}
           onSubmit={handleAddContribution}
           onCancel={() => setContributionGoalId(null)}
+        />
+      )}
+
+      {historyGoal && (
+        <ContributionHistory
+          goal={historyGoal}
+          onDelete={handleDeleteContribution}
+          onClose={() => setHistoryGoalId(null)}
         />
       )}
 

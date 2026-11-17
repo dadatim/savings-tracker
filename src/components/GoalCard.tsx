@@ -10,6 +10,7 @@ import {
 interface GoalCardProps {
   goal: Goal;
   onAddMoney: (goal: Goal) => void;
+  onHistory: (goal: Goal) => void;
   onEdit: (goal: Goal) => void;
   onDelete: (goal: Goal) => void;
 }
@@ -17,6 +18,7 @@ interface GoalCardProps {
 export default function GoalCard({
   goal,
   onAddMoney,
+  onHistory,
   onEdit,
   onDelete,
 }: GoalCardProps) {
@@ -59,6 +61,14 @@ export default function GoalCard({
           onClick={() => onAddMoney(goal)}
         >
           Add money
+        </button>
+        <button
+          type="button"
+          className="btn btn--ghost btn--small"
+          aria-label={`View history for ${goal.name}`}
+          onClick={() => onHistory(goal)}
+        >
+          History ({goal.contributions.length})
         </button>
         <button
           type="button"

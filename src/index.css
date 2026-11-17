@@ -224,3 +224,30 @@ fieldset.field legend { padding: 0; margin-bottom: 6px; font-weight: 600; font-s
   border: 1px dashed var(--line);
   border-radius: 10px;
 }
+
+/* Roomier, scrollable modals (the history list can get long) */
+.modal { width: min(480px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); overflow: auto; }
+
+/* Contribution history */
+.history { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.history__item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 16px;
+  padding: 14px 0;
+  border-top: 1px solid var(--line);
+}
+.history__item:first-child { border-top: 0; padding-top: 0; }
+.history__main, .history__amounts { display: flex; flex-direction: column; }
+.history__amounts { align-items: flex-end; }
+.history__kind { font-weight: 600; }
+.history__amount { font-family: var(--display); font-weight: 600; font-size: 1.1rem; }
+.history__meta { color: var(--muted); font-size: 0.85rem; }
+.history__actions {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}

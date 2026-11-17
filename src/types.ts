@@ -48,3 +48,8 @@ export interface ContributionFormValues {
   date: string; // ISO date
   note: string;
 }
+
+// A contribution plus the running balance of the goal right after it
+export interface HistoryEntry extends Contribution {
+  balance: number;
+}

@@ -5,6 +5,7 @@ import type {
   GoalFormValues,
   GoalStats,
   GoalStatus,
+  HistoryEntry,
 } from '../types';
 
 // Change these two constants to switch currency everywhere.
@@ -138,4 +139,24 @@ export function isGoalArray(v: unknown): v is Goal[] {
         g.contributions.every(isContribution),
     )
   );
+}
+
+// Newest first, each entry carrying the running balance after it.
+// Same-day entries keep the order they were added in.
+export function getHistory(goal: Goal): HistoryEntry[] {
+  const chronological = goal.contributions
+    .map((contribution, index) => ({ contribution, index }))
+    .sort(
+      (a, b) =>
+        a.contribution.date.localeCompare(b.contribution.date) ||
+        a.index - b.index,
+    );
+
+  let balance = 0;
+  return chronological
+    .map(({ contribution }) => {
+      balance += contribution.amount;
+      return { ...contribution, balance };
+    })
+    .reverse();
 }
