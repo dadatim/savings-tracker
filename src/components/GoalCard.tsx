@@ -1,9 +1,11 @@
 import ProgressBar from './ProgressBar';
-import type { Goal } from '../types';
+import type { Goal, PaceMode } from '../types';
 import {
   formatDate,
   formatMoney,
   getGoalStats,
+  getPace,
+  PACE_UNIT,
   STATUS_LABEL,
 } from '../utils/goals';
 
@@ -13,6 +15,7 @@ interface GoalCardProps {
   onHistory: (goal: Goal) => void;
   onEdit: (goal: Goal) => void;
   onDelete: (goal: Goal) => void;
+  paceMode?: PaceMode;
 }
 
 export default function GoalCard({
@@ -21,13 +24,15 @@ export default function GoalCard({
   onHistory,
   onEdit,
   onDelete,
+  paceMode = 'monthly',
 }: GoalCardProps) {
-  const { saved, target, remaining, progress, status, perMonth } =
-    getGoalStats(goal);
+  const stats = getGoalStats(goal);
+  const { saved, target, remaining, progress, status } = stats;
+  const pace = getPace(stats, paceMode);
 
   let hint: string;
   if (status === 'completed') hint = 'You hit your target.';
-  else if (perMonth) hint = `Save ${formatMoney(perMonth)} a month to finish on time.`;
+  else if (pace) hint = `Save ${formatMoney(pace)} a ${PACE_UNIT[paceMode]} to finish on time.`;
   else hint = `${formatMoney(remaining)} to go.`;
 
   const pct = Math.round(progress * 100);

@@ -12,12 +12,18 @@ import DashboardToolbar, {
 } from './components/DashboardToolbar';
 import RecentActivity from './components/RecentActivity';
 import UpcomingDeadline from './components/UpcomingDeadline';
+import PaceOverview from './components/PaceOverview';
 import LandingPage from './components/LandingPage';
 import AuthPage from './components/AuthPage';
 import OnboardingFlow from './components/OnboardingFlow';
 import { mockGoals } from './data/mockGoals';
 import { useLocalStorage } from './hooks/useLocalStorage';
-import type { ContributionFormValues, Goal, GoalFormValues } from './types';
+import type {
+  ContributionFormValues,
+  Goal,
+  GoalFormValues,
+  PaceMode,
+} from './types';
 import {
   createContribution,
   createGoal,
@@ -29,6 +35,7 @@ import {
 const GOALS_STORAGE_KEY = 'savings-goal-tracker:goals:v1';
 const USER_STORAGE_KEY = 'savings-goal-tracker:user:v1';
 const VIEW_STORAGE_KEY = 'savings-goal-tracker:view:v1';
+const PACE_STORAGE_KEY = 'savings-goal-tracker:pace:v1';
 
 export type AppView = 'landing' | 'auth' | 'onboarding' | 'dashboard';
 
@@ -49,6 +56,13 @@ export default function App() {
     VIEW_STORAGE_KEY,
     'dashboard',
     (v): v is AppView => typeof v === 'string' && ['landing', 'auth', 'onboarding', 'dashboard'].includes(v),
+  );
+
+  // Monthly / weekly view for "how much to save" figures across the dashboard
+  const [paceMode, setPaceMode] = useLocalStorage<PaceMode>(
+    PACE_STORAGE_KEY,
+    'monthly',
+    (v): v is PaceMode => v === 'monthly' || v === 'weekly',
   );
 
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('signup');
@@ -260,6 +274,7 @@ export default function App() {
         <OnboardingFlow
           onComplete={handleOnboardingComplete}
           onCancel={() => setCurrentView('dashboard')}
+          paceMode={paceMode}
         />
       </div>
     );
@@ -295,6 +310,15 @@ export default function App() {
           onTrackCount={onTrackCount}
           behindCount={behindCount}
         />
+
+        {/* Savings pace: how much to set aside per month or per week */}
+        {goals.length > 0 && (
+          <PaceOverview
+            goals={goals}
+            mode={paceMode}
+            onModeChange={setPaceMode}
+          />
+        )}
 
         {/* Minimal toolbar */}
         <DashboardToolbar
@@ -351,6 +375,7 @@ export default function App() {
                 onHistory={(g) => setHistoryGoalId(g.id)}
                 onEdit={(g) => setEditingGoalId(g.id)}
                 onDelete={(g) => setDeletingGoalId(g.id)}
+                paceMode={paceMode}
               />
             ))}
           </section>
@@ -362,6 +387,7 @@ export default function App() {
             <UpcomingDeadline
               goals={goals}
               onAddMoney={(g) => setContributionGoalId(g.id)}
+              paceMode={paceMode}
             />
 
             <RecentActivity

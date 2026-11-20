@@ -21,6 +21,8 @@ export type GoalStatus =
   | 'overdue'
   | 'open';
 
+export type PaceMode = 'monthly' | 'weekly';
+
 export interface GoalStats {
   saved: number;
   target: number;
@@ -28,6 +30,7 @@ export interface GoalStats {
   progress: number; // 0 to 1
   status: GoalStatus;
   perMonth: number | null; // amount to save per month to hit the deadline
+  perWeek: number | null; // amount to save per week to hit the deadline
 }
 
 // What the "New goal" form collects before a Goal is created from it

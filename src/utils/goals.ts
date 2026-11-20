@@ -6,6 +6,7 @@ import type {
   GoalStats,
   GoalStatus,
   HistoryEntry,
+  PaceMode,
 } from '../types';
 
 // Change these two constants to switch currency everywhere.
@@ -29,6 +30,16 @@ export const formatDate = (iso: string): string =>
 
 const DAY_MS = 1000 * 60 * 60 * 24;
 
+const DAYS_PER_PERIOD: Record<PaceMode, number> = {
+  monthly: 30.44,
+  weekly: 7,
+};
+
+// Whole periods (months or weeks) left until the deadline; always at least 1,
+// so a deadline less than a week away counts as one week.
+export const getPeriodsLeft = (daysLeft: number, mode: PaceMode): number =>
+  Math.max(Math.ceil(daysLeft / DAYS_PER_PERIOD[mode]), 1);
+
 export const getSaved = (goal: Goal): number =>
   goal.contributions.reduce((sum, c) => sum + c.amount, 0);
 
@@ -39,10 +50,10 @@ export function getGoalStats(goal: Goal, today: Date = new Date()): GoalStats {
   const progress = Math.min(saved / target, 1);
 
   if (saved >= target) {
-    return { saved, target, remaining: 0, progress: 1, status: 'completed', perMonth: 0 };
+    return { saved, target, remaining: 0, progress: 1, status: 'completed', perMonth: 0, perWeek: 0 };
   }
   if (!goal.deadline) {
-    return { saved, target, remaining, progress, status: 'open', perMonth: null };
+    return { saved, target, remaining, progress, status: 'open', perMonth: null, perWeek: null };
   }
 
   const start = new Date(goal.createdAt).getTime();
@@ -51,11 +62,10 @@ export function getGoalStats(goal: Goal, today: Date = new Date()): GoalStats {
   const daysLeft = (end - now) / DAY_MS;
 
   if (daysLeft < 0) {
-    return { saved, target, remaining, progress, status: 'overdue', perMonth: null };
+    return { saved, target, remaining, progress, status: 'overdue', perMonth: null, perWeek: null };
   }
 
   const elapsed = Math.min(Math.max((now - start) / (end - start), 0), 1);
-  const monthsLeft = Math.max(Math.ceil(daysLeft / 30.44), 1);
 
   return {
     saved,
@@ -63,7 +73,8 @@ export function getGoalStats(goal: Goal, today: Date = new Date()): GoalStats {
     remaining,
     progress,
     status: progress >= elapsed ? 'on-track' : 'behind',
-    perMonth: Math.ceil(remaining / monthsLeft),
+    perMonth: Math.ceil(remaining / getPeriodsLeft(daysLeft, 'monthly')),
+    perWeek: Math.ceil(remaining / getPeriodsLeft(daysLeft, 'weekly')),
   };
 }
 
@@ -74,6 +85,15 @@ export const STATUS_LABEL: Record<GoalStatus, string> = {
   overdue: 'Past deadline',
   open: 'No deadline',
 };
+
+export const PACE_UNIT: Record<PaceMode, string> = {
+  monthly: 'month',
+  weekly: 'week',
+};
+
+// The amount to save per period for whichever view is selected
+export const getPace = (stats: GoalStats, mode: PaceMode): number | null =>
+  mode === 'weekly' ? stats.perWeek : stats.perMonth;
 
 // Local calendar date as YYYY-MM-DD (avoids the UTC off-by-one of toISOString)
 export const todayISO = (): string => new Date().toLocaleDateString('en-CA');

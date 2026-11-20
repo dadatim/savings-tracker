@@ -1,15 +1,23 @@
-import type { Goal } from '../types';
-import { formatDate, formatMoney, getGoalStats } from '../utils/goals';
+import type { Goal, PaceMode } from '../types';
+import {
+  formatDate,
+  formatMoney,
+  getGoalStats,
+  getPace,
+  PACE_UNIT,
+} from '../utils/goals';
 import ProgressBar from './ProgressBar';
 
 interface UpcomingDeadlineProps {
   goals: Goal[];
   onAddMoney: (goal: Goal) => void;
+  paceMode?: PaceMode;
 }
 
 export default function UpcomingDeadline({
   goals,
   onAddMoney,
+  paceMode = 'monthly',
 }: UpcomingDeadlineProps) {
   // Find active goals with deadlines, sorted by deadline soonest
   const activeDeadlineGoals = goals
@@ -52,6 +60,7 @@ export default function UpcomingDeadline({
   }
 
   const { goal, stats } = next;
+  const pace = getPace(stats, paceMode);
   const deadlineDate = goal.deadline ? formatDate(goal.deadline) : '';
   const daysLeft = Math.ceil(
     (new Date(goal.deadline!).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24),
@@ -109,9 +118,9 @@ export default function UpcomingDeadline({
           label={`${goal.name} priority progress`}
         />
 
-        {stats.perMonth ? (
+        {pace ? (
           <p className="dash-focus-card__hint">
-            Save <strong>{formatMoney(stats.perMonth)}/month</strong> to finish on schedule.
+            Save <strong>{formatMoney(pace)}/{PACE_UNIT[paceMode]}</strong> to finish on schedule.
           </p>
         ) : (
           <p className="dash-focus-card__hint">

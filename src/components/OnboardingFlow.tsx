@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
-import { formatMoney, todayISO } from '../utils/goals';
+import type { PaceMode } from '../types';
+import { formatMoney, getPeriodsLeft, PACE_UNIT, todayISO } from '../utils/goals';
 import ProgressBar from './ProgressBar';
 
 interface OnboardingFlowProps {
@@ -14,6 +15,7 @@ interface OnboardingFlowProps {
     };
   }) => void;
   onCancel: () => void;
+  paceMode?: PaceMode;
 }
 
 const PRESET_GOALS = [
@@ -24,7 +26,11 @@ const PRESET_GOALS = [
   { label: '🎓 Professional Course', name: 'Cloud Certification', amount: 150000 },
 ];
 
-export default function OnboardingFlow({ onComplete, onCancel }: OnboardingFlowProps) {
+export default function OnboardingFlow({
+  onComplete,
+  onCancel,
+  paceMode = 'monthly',
+}: OnboardingFlowProps) {
   const today = todayISO();
   const [step, setStep] = useState<1 | 2 | 3>(1);
 
@@ -42,14 +48,13 @@ export default function OnboardingFlow({ onComplete, onCancel }: OnboardingFlowP
   const progressRatio = numTarget > 0 ? Math.min(numStarting / numTarget, 1) : 0;
   const remaining = Math.max(numTarget - numStarting, 0);
 
-  let monthlyPace: number | null = null;
+  let pace: number | null = null;
   if (deadline && numTarget > 0) {
     const end = new Date(deadline).getTime();
     const now = new Date().getTime();
     const daysLeft = (end - now) / (1000 * 60 * 60 * 24);
     if (daysLeft > 0) {
-      const months = Math.max(Math.ceil(daysLeft / 30.44), 1);
-      monthlyPace = Math.ceil(remaining / months);
+      pace = Math.ceil(remaining / getPeriodsLeft(daysLeft, paceMode));
     }
   }
 
@@ -305,8 +310,8 @@ export default function OnboardingFlow({ onComplete, onCancel }: OnboardingFlowP
               />
 
               <footer className="card__foot">
-                {monthlyPace ? (
-                  <span>Save {formatMoney(monthlyPace)} a month to finish on time.</span>
+                {pace ? (
+                  <span>Save {formatMoney(pace)} a {PACE_UNIT[paceMode]} to finish on time.</span>
                 ) : (
                   <span>{formatMoney(remaining)} to go.</span>
                 )}
