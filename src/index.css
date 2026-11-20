@@ -4374,3 +4374,7 @@ a, button, input, select {
 }
 .pace__amount small { color: var(--muted); font-weight: 500; font-size: 0.8rem; }
 .pace__more { margin: 6px 0 0; color: var(--muted); font-size: 0.85rem; }
+
+/* Three-way toggle: widen it and drop the doubled borders between segments */
+.pace__toggle { width: min(270px, 100%); }
+.pace__toggle label:not(:first-child) span { border-left: 0; }

@@ -16,6 +16,7 @@ interface PaceOverviewProps {
 const MODES: { value: PaceMode; label: string }[] = [
   { value: 'monthly', label: 'Monthly' },
   { value: 'weekly', label: 'Weekly' },
+  { value: 'daily', label: 'Daily' },
 ];
 
 const MAX_ROWS = 5;
@@ -45,7 +46,7 @@ export default function PaceOverview({
           <h2 className="pace__title">Savings pace</h2>
           <p className="pace__summary" aria-live="polite">
             {rows.length === 0 ? (
-              'Add a deadline to a goal to see how much to save each week or month.'
+              'Add a deadline to a goal to see how much to save each day, week, or month.'
             ) : (
               <>
                 Set aside <strong>{formatMoney(total)}</strong> a {unit} to finish{' '}

@@ -62,7 +62,7 @@ export default function App() {
   const [paceMode, setPaceMode] = useLocalStorage<PaceMode>(
     PACE_STORAGE_KEY,
     'monthly',
-    (v): v is PaceMode => v === 'monthly' || v === 'weekly',
+    (v): v is PaceMode => v === 'monthly' || v === 'weekly' || v === 'daily',
   );
 
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('signup');
